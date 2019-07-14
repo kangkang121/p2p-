@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.p2p.base.mapper.IplogMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.Iplog">
+    <id column="id" property="id" />
+    <result column="ip" property="ip" />
+    <result column="state" property="state" />
+    <result column="username" property="username" />
+    <result column="login_time" property="loginTime" />
+    <result column="user_type" property="userType" />
+  </resultMap>
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into iplog (ip, state, username, login_time, user_type)
+    values (#{ip}, #{state}, #{username}, #{loginTime}, #{userType})
+  </insert>
+
+  <select id="selectForCount" resultType="int" >
+    select count(0) from iplog
+    <include refid="sqlConditions"/>
+  </select>
+  <select id="selectForList" resultMap="BaseResultMap">
+    select id, ip, state, username, login_time, user_type
+    from iplog
+    <include refid="sqlConditions"/>
+    limit #{start}, #{pageSize}
+  </select>
+
+  <sql id="sqlConditions">
+    <where>
+      <if test="state != -1">
+        and state = #{state}
+      </if>
+      <if test="username != null">
+        and username = #{username}
+      </if>
+      <if test="beginTime != null">
+        and login_time &gt;= #{beginTime}
+      </if>
+      <if test="endTime != null">
+        and login_time &lt;= #{endTime}
+      </if>
+      <if test="userType != -1">
+        and user_type = #{userType}
+      </if>
+    </where>
+  </sql>
+</mapper>

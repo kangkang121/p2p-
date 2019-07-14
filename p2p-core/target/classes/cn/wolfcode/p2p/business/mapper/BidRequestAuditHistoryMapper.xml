@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.p2p.business.mapper.BidRequestAuditHistoryMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.business.domain.BidRequestAuditHistory">
+    <id column="id" property="id" />
+    <result column="state" property="state" />
+    <result column="remark" property="remark" />
+    <result column="audit_time" property="auditTime" />
+    <result column="apply_time" property="applyTime" />
+    <result column="bidRequest_id" property="bidRequestId" />
+    <result column="audit_type" property="auditType" />
+    <!--内敛映射-->
+    <association property="auditor" columnPrefix="auditor_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.SimpleResultMap" />
+    <association property="applier" columnPrefix="applier_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.SimpleResultMap" />
+  </resultMap>
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into bid_request_audit_history (state, remark, audit_time, apply_time, auditor_id, applier_id, 
+      bidRequest_id, audit_type)
+    values (#{state}, #{remark}, #{auditTime}, #{applyTime}, #{auditor.id}, #{applier.id},
+      #{bidRequestId}, #{auditType})
+  </insert>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select ra.id, ra.state, remark, audit_time, apply_time, auditor_id, applier_id, bidRequest_id,
+    audit_type,
+    auditor.id auditor_id, auditor.username auditor_username,
+    applier.id applier_id, applier.username applier_username
+    from bid_request_audit_history ra
+    left join logininfo auditor on ra.auditor_id = auditor.id
+    left join logininfo applier on ra.applier_id = applier.id
+    where id = #{id}
+  </select>
+</mapper>

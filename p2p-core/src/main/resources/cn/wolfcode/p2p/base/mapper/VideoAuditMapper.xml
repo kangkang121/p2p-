@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.p2p.base.mapper.VideoAuditMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.base.domain.VideoAudit">
+    <id column="id" property="id" />
+    <result column="state" property="state" />
+    <result column="remark" property="remark" />
+    <result column="audit_time" property="auditTime" />
+    <result column="apply_time" property="applyTime" />
+    <result column="order_date" property="orderDate" />
+
+    <association property="auditor" columnPrefix="auditor_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.SimpleResultMap"/>
+    <association property="applier" columnPrefix="applier_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.SimpleResultMap"/>
+    <association property="orderTime" columnPrefix="ot_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.OrderTimeMapper.BaseResultMap"/>
+
+  </resultMap>
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into video_audit (state, remark, audit_time, apply_time, auditor_id, applier_id,
+      order_time_id, order_date)
+    values (#{state}, #{remark}, #{auditTime}, #{applyTime}, #{auditor.id}, #{applier.id},
+      #{orderTime.id}, #{orderDate})
+  </insert>
+  <update id="updateByPrimaryKey">
+    update video_audit
+    set state = #{state},
+      remark = #{remark},
+      audit_time = #{auditTime},
+      apply_time = #{applyTime},
+      auditor_id = #{auditor.id},
+      applier_id = #{applier.id},
+      order_time_id = #{orderTime.id},
+      order_date = #{orderDate}
+    where id = #{id}
+  </update>
+  <delete id="delectById">
+    delete from video_audit where id=#{videoAuditId}
+  </delete>
+
+  <!--sql查询基本条件-->
+  <sql id="sql_columns">
+    va.id, va.state, remark, audit_time, apply_time, auditor_id, applier_id, order_time_id,
+    order_date ,
+    auditor.id auditor_id, auditor.username auditor_username,
+    applier.id applier_id, applier.username applier_username,
+    ot.id ot_id, ot.begin ot_begin, ot.end ot_end
+  </sql>
+  <sql id="sql_tables">
+    video_audit va
+    left join logininfo auditor on va.auditor_id = auditor.id
+    left join logininfo applier on va.applier_id = applier.id
+    left join order_time ot on va.order_time_id = ot.id
+  </sql>
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select <include refid="sql_columns"/>
+    from <include refid="sql_tables"/>
+    where va.id = #{id}
+  </select>
+
+  <sql id="sql_where">
+    <where>
+        <if test="state != -1">
+          and  va.state = #{state}
+        </if>
+        <if test="beginDate != null">
+          and  va.apply_time &gt;= #{beginDate}
+        </if>
+        <if test="endDate != null">
+          and  va.apply_time &lt;= #{endDate}
+        </if>
+        <if test="username != null">
+          and applier.username like concat('%',#{username},'%')
+        </if>
+        <if test="auditorId != null">
+          and  va.auditor_id = #{auditorId}
+        </if>
+    </where>
+  </sql>
+
+  <select id="selectForCount" resultType="int">
+    select count(0) from video_audit va
+    left join logininfo auditor on va.auditor_id = auditor.id
+  </select>
+  <select id="selectForList" resultMap="BaseResultMap">
+    select <include refid="sql_columns"/>
+    from <include refid="sql_tables"/>
+    <include refid="sql_where"/>
+    <if test="orderBy != null">
+      ${orderBy} <if test="orderType != null">${orderType}</if>
+    </if>
+    limit #{start}, #{pageSize}
+  </select>
+</mapper>

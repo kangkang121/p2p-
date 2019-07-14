@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.wolfcode.p2p.business.mapper.BidRequestMapper">
+  <resultMap id="BaseResultMap" type="cn.wolfcode.p2p.business.domain.BidRequest">
+    <id column="id" property="id" />
+    <result column="version" property="version" />
+    <result column="bid_request——type" property="bidRequestType" />
+    <result column="bid_request_state" property="bidRequestState" />
+    <result column="bid_request_amount" property="bidRequestAmount" />
+    <result column="current_rate" property="currentRate" />
+    <result column="monthes2return" property="monthes2Return" />
+    <result column="bid_count" property="bidCount" />
+    <result column="total_reward_amount" property="totalRewardAmount" />
+    <result column="current_sum" property="currentSum" />
+    <result column="title" property="title" />
+    <result column="description" property="description" />
+    <result column="note" property="note" />
+    <result column="disable_date" property="disableDate" />
+    <result column="disable_days" property="disableDays" />
+    <result column="min_bid_amount" property="minBidAmount" />
+    <result column="apply_time" property="applyTime" />
+    <result column="publish_time" property="publishTime" />
+    <result column="return_type" property="returnType" />
+    <association property="createUser" columnPrefix="li_"
+                 resultMap="cn.wolfcode.p2p.base.mapper.LoginInfoMapper.SimpleResultMap"/>
+
+    <association property="bids" column="id" select="cn.wolfcode.p2p.business.mapper.BidMapper.selectByBidRequestId"/>
+  </resultMap>
+  <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+    insert into bid_request (version, bid_request_type, bid_request_state, bid_request_amount,
+      current_rate, monthes2return, bid_count, total_reward_amount, current_sum, 
+      title, description, note, disable_date, create_user_id, disable_days, 
+      min_bid_amount, apply_time, publish_time, return_type)
+    values (#{version}, #{bidRequestType}, #{bidRequestState}, #{bidRequestAmount},
+      #{currentRate}, #{monthes2Return}, #{bidCount}, #{totalRewardAmount}, #{currentSum},
+      #{title}, #{description}, #{note}, #{disableDate}, #{createUser.id}, #{disableDays},
+      #{minBidAmount}, #{applyTime}, #{publishTime}, #{returnType})
+  </insert>
+  <update id="updateByPrimaryKey">
+    update bid_request
+    set version = version + 1,
+      bid_request_type = #{bidRequestType},
+      return_type = #{returnType},
+      bid_request_state = #{bidRequestState},
+      bid_request_amount = #{bidRequestAmount},
+      current_rate = #{currentRate},
+      monthes2return = #{monthes2Return},
+      bid_count = #{bidCount},
+      total_reward_amount = #{totalRewardAmount},
+      current_sum = #{currentSum},
+      title = #{title},
+      description = #{description},
+      note = #{note},
+      disable_date = #{disableDate},
+      create_user_id = #{createUser.id},
+      disable_days = #{disableDays},
+      min_bid_amount = #{minBidAmount},
+      apply_time = #{applyTime},
+      publish_time = #{publishTime}
+    where id = #{id} and version = #{version}
+  </update>
+
+  <!--sql基本属性值-->
+  <sql id="sql_columns">
+    br.id, br.version, bid_request_type, bid_request_state, bid_request_amount, current_rate,
+    monthes2return, bid_count, total_reward_amount, current_sum, title, description,
+    note, disable_date, create_user_id, disable_days, min_bid_amount, apply_time, publish_time,return_type,
+    li.id li_id, li.username li_username
+  </sql>
+  <sql id="sql_tab">
+    bid_request br join logininfo li on li.id = br.create_user_id
+  </sql>
+
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+    select <include refid="sql_columns"/>
+    from <include refid="sql_tab"/>
+    where br.id = #{id}
+  </select>
+
+  <select id="selectByCreateUser" resultMap="BaseResultMap">
+    select <include refid="sql_columns"/>
+    from <include refid="sql_tab"/>
+    where li.id = #{id}
+  </select>
+
+  <sql id="sql_where">
+    <where>
+      <if test="state != -1">
+          and bid_request_state = #{state}
+      </if>
+      <if test="states != null">
+        and bid_request_state in
+        <foreach collection="states" open="(" close=")" separator="," item="item">
+          #{item}
+        </foreach>
+      </if>
+    </where>
+  </sql>
+
+  <select id="selectForCount" resultType="int">
+    select count(0) from bid_request br
+    <include refid="sql_where"/>
+  </select>
+
+  <select id="selectForList" resultMap="BaseResultMap">
+    select <include refid="sql_columns"/>
+    from <include refid="sql_tab"/>
+    <include refid="sql_where"/>
+    order by
+    <if test="orderBy != null">
+      ${orderBy} <if test="orderType != null">${orderType}</if>
+    </if>
+    limit #{start}, #{pageSize}
+  </select>
+
+
+  <select id="selectPendingRelease" resultMap="BaseResultMap">
+    select <include refid="sql_columns"/>
+    from <include refid="sql_tab"/>
+    where bid_request_state = #{state}
+  </select>
+
+</mapper>
